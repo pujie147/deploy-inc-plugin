@@ -16,7 +16,6 @@ package org.nouk.maven.plugin;
  * limitations under the License.
  */
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -139,13 +138,11 @@ public class BuildIncMojo extends AbstractDependencyMojo {
             final Map<String, Artifact> jars = mavenProjectService.getAllJars(getProject(), session);
             if (jars != null && jars.size()>0) {
                 if(jarInfos!=null && jars.size()>0) {
-                    final Iterator<String> iterator = jars.keySet().iterator();
-                    while (iterator.hasNext()) {
-                        final String jarKey = iterator.next();
+                    final HashSet<String> strings = (HashSet<String>) Sets.newHashSet(jars.keySet()).clone();
+                    for (String jarKey : strings) {
                         if (containMustDownloadJars(jarKey)) {
                             continue;
                         }
-
                         if (jarInfos.containsKey(jarKey)) {
                             jars.remove(jarKey);
                         }
@@ -167,9 +164,8 @@ public class BuildIncMojo extends AbstractDependencyMojo {
             final Map<String, MavenProject> allProjectsIgnorePom = mavenProjectService.getAllProjectsIgnorePom(getProject(), session);
             if (allProjectsIgnorePom != null && allProjectsIgnorePom.size()>0) {
                 if(projectInfoMap!=null&& projectInfoMap.size()>0) {
-                    final Iterator<String> iterator = allProjectsIgnorePom.keySet().iterator();
-                    while (iterator.hasNext()) {
-                        String projectName = iterator.next();
+                    final HashSet<String> strings = (HashSet<String>) Sets.newHashSet(allProjectsIgnorePom.keySet()).clone();
+                    for (String projectName : strings) {
                         if (projectInfoMap.containsKey(projectName)) {
                             final ProjectInfo projectInfo = new ProjectInfo(allProjectsIgnorePom.get(projectName));
                             if (projectInfo.getSize().compareTo(projectInfoMap.get(projectName).getSize())==0) {
@@ -185,14 +181,17 @@ public class BuildIncMojo extends AbstractDependencyMojo {
                     stringBuilder.append(":"+value.getName()+",");
                 }
 
+                String substring = "";
                 // 安装 模块
-                final String substring = stringBuilder.substring(0, stringBuilder.length() - 1);
-                final String cmd = "mvn install -f " + MavenUtil.getGroupIdRootProject(getProject()).getFile().getPath() + " -pl " + substring + " -Dmaven.test.skip=true";
-                getLog().info("------------------------------------<SHELL>------------------------------------");
-                getLog().info(cmd);
-                getLog().info("------------------------------------<SHELL>------------------------------------");
-                final String s = ShellUtil.execToString(cmd);
-                getLog().info(s);
+                if (allProjectsIgnorePom.values().size()>0) {
+                    substring = stringBuilder.substring(0, stringBuilder.length() - 1);
+                    final String cmd = "mvn install -f " + MavenUtil.getGroupIdRootProject(getProject()).getFile().getPath() + " -pl " + substring + " -Dmaven.test.skip=true";
+                    getLog().info("------------------------------------<SHELL>------------------------------------");
+                    getLog().info(cmd);
+                    getLog().info("------------------------------------<SHELL>------------------------------------");
+                    final String s = ShellUtil.execToString(cmd);
+                    getLog().info(s);
+                }
                 // 增量模块复制到统一目录下
                 for (MavenProject value : allProjectsIgnorePom.values()) {
                     final Artifact artifact = value.getArtifact();

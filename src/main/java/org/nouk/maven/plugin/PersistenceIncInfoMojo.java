@@ -17,29 +17,15 @@ package org.nouk.maven.plugin;
  */
 
 
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 
 
 
 @Mojo(name = "persistence-inc", requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PROCESS_SOURCES, threadSafe = true)
 public class PersistenceIncInfoMojo extends AbstractDependencyMojo {
-//
-//    @Parameter( property = "incOutputCache", defaultValue = "${project.build.directory}/inc-cache/jar.classInfo" )
-//    protected File incJarOutputCache;
-//    @Parameter( property = "incOutputCache", defaultValue = "${project.build.directory}/inc-cache/project.classInfo" )
-//    protected File incProjectOutputCache;
-//
-//    @Inject
-//    private MavenProjectService mavenProjectService;
-//
-//    @Parameter( defaultValue = "${session}", readonly = true, required = true )
-//    protected MavenSession session;
-
 
     @Override
-    protected void doExecute() throws MojoExecutionException, MojoFailureException {
+    protected void doExecute(){
         persistenceIncInfo();
     }
 }

@@ -16,6 +16,7 @@ package org.nouk.maven.plugin;
  * limitations under the License.
  */
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -138,8 +139,9 @@ public class BuildIncMojo extends AbstractDependencyMojo {
             final Map<String, Artifact> jars = mavenProjectService.getAllJars(getProject(), session);
             if (jars != null && jars.size()>0) {
                 if(jarInfos!=null && jars.size()>0) {
-                    final Set<String> strings = Sets.newHashSet(jars.keySet());
-                    for (String jarKey : strings) {
+                    final Iterator<String> iterator = jars.keySet().iterator();
+                    while (iterator.hasNext()) {
+                        final String jarKey = iterator.next();
                         if (containMustDownloadJars(jarKey)) {
                             continue;
                         }
@@ -165,8 +167,9 @@ public class BuildIncMojo extends AbstractDependencyMojo {
             final Map<String, MavenProject> allProjectsIgnorePom = mavenProjectService.getAllProjectsIgnorePom(getProject(), session);
             if (allProjectsIgnorePom != null && allProjectsIgnorePom.size()>0) {
                 if(projectInfoMap!=null&& projectInfoMap.size()>0) {
-                    final HashSet<String> strings = Sets.newHashSet(allProjectsIgnorePom.keySet());
-                    for (String projectName : strings) {
+                    final Iterator<String> iterator = allProjectsIgnorePom.keySet().iterator();
+                    while (iterator.hasNext()) {
+                        String projectName = iterator.next();
                         if (projectInfoMap.containsKey(projectName)) {
                             final ProjectInfo projectInfo = new ProjectInfo(allProjectsIgnorePom.get(projectName));
                             if (projectInfo.getSize().compareTo(projectInfoMap.get(projectName).getSize())==0) {

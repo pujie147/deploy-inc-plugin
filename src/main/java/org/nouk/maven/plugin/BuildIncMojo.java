@@ -23,8 +23,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectBuildingException;
-import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.FileUtils;
 import org.nouk.maven.plugin.entiry.JarInfo;
 import org.nouk.maven.plugin.entiry.ProjectInfo;
@@ -40,7 +38,8 @@ import java.io.IOException;
 import java.util.*;
 
 
-@Mojo( name = "build-inc", requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PROCESS_SOURCES, threadSafe = true)
+@Mojo( name = "build-inc", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_SOURCES, threadSafe = true)
+@Execute(phase = LifecyclePhase.INITIALIZE)
 public class BuildIncMojo extends AbstractDependencyMojo {
     /**
      * Either append the artifact's baseVersion or uniqueVersion to the filename. Will only be used if

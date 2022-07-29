@@ -186,7 +186,7 @@ public class BuildIncMojo extends AbstractDependencyMojo {
             // 安装 模块
             if (allProjectsIgnorePom.values().size()>0) {
                 substring = stringBuilder.substring(0, stringBuilder.length() - 1);
-                final String cmd = "mvn install -f " + MavenUtil.getGroupIdRootProject(getProject()).getFile().getPath() + " -pl " + substring + " -Dmaven.test.skip=true";
+                final String cmd = "mvn install -f " + MavenUtil.getGroupIdRootProject(getProject()).getFile().getPath() + " -pl " + substring + " -Dmdep.skip=true -DdeployInc.skip=true -Dassembly.skipAssembly=true -Dmaven.test.skip=true";
                 getLog().info("------------------------------------<SHELL>------------------------------------");
                 getLog().info(cmd);
                 getLog().info("------------------------------------<SHELL>------------------------------------");
@@ -200,8 +200,19 @@ public class BuildIncMojo extends AbstractDependencyMojo {
                         this.stripClassifier);
             }
         }
-        // 持久化 新增记录
-        persistenceIncInfo();
+        final File resourcesFile = new File(getProject().getFile().getParentFile(), "src" + File.separator + "main" + File.separator + "resources");
+        if (resourcesFile.exists()) {
+            try {
+                final File conf = new File(incOutputDirectory, "conf");
+                if (!conf.exists()) {
+                    conf.mkdirs();
+                }
+                FileUtils.copyDirectory(resourcesFile,conf);
+            } catch (IOException e) {
+                getLog().error("resources file copy fail!");
+                getLog().error(e.getMessage());
+            }
+        }
         // 压缩打包
         GZipUtil.compression(incOutputDirectory.getPath(),outputDirectory.getPath(),"february-biz-inc");
     }

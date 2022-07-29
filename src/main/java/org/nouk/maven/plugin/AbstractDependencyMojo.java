@@ -142,7 +142,7 @@ public abstract class AbstractDependencyMojo
      *
      * @since 2.7
      */
-    @Parameter( property = "mdep.skip", defaultValue = "false" )
+    @Parameter( property = "deployInc.skip", defaultValue = "false" )
     private boolean skip;
 
     @Parameter( property = "incOutputCache", defaultValue = "${project.build.directory}/inc-cache/jar.classInfo" )
@@ -162,9 +162,7 @@ public abstract class AbstractDependencyMojo
         Map<String, ProjectInfo> projects = Maps.newHashMap();
         Map<String, MavenProject> allProjects = null;
 
-
         allProjects = mavenProjectService.getAllProjectsIgnorePom(project, session);
-
 
         for (MavenProject mavenProject : allProjects.values()){
             final ProjectInfo projectInfo = new ProjectInfo(mavenProject);

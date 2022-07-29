@@ -155,20 +155,16 @@ public abstract class AbstractDependencyMojo
 
     // Mojo methods -----------------------------------------------------------
 
-    protected void persistenceIncInfo(){
+    protected void persistenceIncInfo() throws MojoExecutionException {
         ProjectInfoDBServiceImpl projectInfoDBService = new ProjectInfoDBServiceImpl(incProjectOutputCache);
         JarInfoDBServiceImpl jarInfoDBService = new JarInfoDBServiceImpl(incJarOutputCache);
 
         Map<String, ProjectInfo> projects = Maps.newHashMap();
         Map<String, MavenProject> allProjects = null;
 
-        try {
-            allProjects = mavenProjectService.getAllProjectsIgnorePom(project, session);
-        } catch (ComponentLookupException e) {
-            e.printStackTrace();
-        } catch (ProjectBuildingException e) {
-            e.printStackTrace();
-        }
+
+        allProjects = mavenProjectService.getAllProjectsIgnorePom(project, session);
+
 
         for (MavenProject mavenProject : allProjects.values()){
             final ProjectInfo projectInfo = new ProjectInfo(mavenProject);

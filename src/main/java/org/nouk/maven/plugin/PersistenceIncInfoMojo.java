@@ -17,6 +17,7 @@ package org.nouk.maven.plugin;
  */
 
 
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;
 
 
@@ -25,7 +26,7 @@ import org.apache.maven.plugins.annotations.*;
 public class PersistenceIncInfoMojo extends AbstractDependencyMojo {
 
     @Override
-    protected void doExecute(){
+    protected void doExecute() throws MojoExecutionException {
         persistenceIncInfo();
     }
 }

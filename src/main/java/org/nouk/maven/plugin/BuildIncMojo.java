@@ -20,8 +20,11 @@ import com.google.common.collect.Sets;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.ProjectBuildingException;
+import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
 import org.codehaus.plexus.util.FileUtils;
 import org.nouk.maven.plugin.entiry.JarInfo;
 import org.nouk.maven.plugin.entiry.ProjectInfo;
@@ -116,12 +119,11 @@ public class BuildIncMojo extends AbstractDependencyMojo {
     /**
      * 必定下载jar包
      */
-    @Parameter( property = "mustDownloadJars")
+    @Parameter(property = "mustDownloadJars")
     protected List<String> mustDownloadJars;
 
     @Override
-    protected void doExecute() {
-        final HashSet<String> mustDownloadJarsSet = Sets.newHashSet(mustDownloadJars);
+    protected void doExecute() throws MojoExecutionException, MojoFailureException {
         if (incOutputDirectory.exists()) {
             try {
                 FileUtils.cleanDirectory(incOutputDirectory);
@@ -132,88 +134,84 @@ public class BuildIncMojo extends AbstractDependencyMojo {
         ProjectInfoDBServiceImpl projectInfoDBService = new ProjectInfoDBServiceImpl(incProjectOutputCache);
         JarInfoDBServiceImpl jarInfoDBService = new JarInfoDBServiceImpl(incJarOutputCache);
 
-        try {
-            // 过滤增量 jars
-            final Map<String, JarInfo> jarInfos = jarInfoDBService.read();
-            final Map<String, Artifact> jars = mavenProjectService.getAllJars(getProject(), session);
-            if (jars != null && jars.size()>0) {
-                if(jarInfos!=null && jars.size()>0) {
-                    final HashSet<String> strings = (HashSet<String>) Sets.newHashSet(jars.keySet()).clone();
-                    for (String jarKey : strings) {
-                        if (containMustDownloadJars(jarKey)) {
-                            continue;
-                        }
-                        if (jarInfos.containsKey(jarKey)) {
-                            jars.remove(jarKey);
-                        }
+        // 过滤增量 jars
+        final Map<String, JarInfo> jarInfos = jarInfoDBService.read();
+        final Map<String, Artifact> jars = mavenProjectService.getAllJars(getProject(), session);
+        if (jars != null && jars.size()>0) {
+            if(jarInfos!=null && jars.size()>0) {
+                final HashSet<String> strings = (HashSet<String>) Sets.newHashSet(jars.keySet()).clone();
+                for (String jarKey : strings) {
+                    if (containMustDownloadJars(jarKey)) {
+                        continue;
+                    }
+                    if (jarInfos.containsKey(jarKey)) {
+                        jars.remove(jarKey);
                     }
                 }
-                final File lib = new File(incOutputDirectory, "lib");
-                if (!lib.exists()) {
-                    lib.mkdirs();
-                }
-                // 增量jar复制到统一目录下
-                for (Artifact value : jars.values()) {
-                    copyArtifact( value, stripVersion, this.prependGroupId, this.useBaseVersion,
-                            this.stripClassifier );
-                }
             }
-
-            // 过滤增量模块
-            final Map<String, ProjectInfo> projectInfoMap = projectInfoDBService.read();
-            final Map<String, MavenProject> allProjectsIgnorePom = mavenProjectService.getAllProjectsIgnorePom(getProject(), session);
-            if (allProjectsIgnorePom != null && allProjectsIgnorePom.size()>0) {
-                if(projectInfoMap!=null&& projectInfoMap.size()>0) {
-                    final HashSet<String> strings = (HashSet<String>) Sets.newHashSet(allProjectsIgnorePom.keySet()).clone();
-                    for (String projectName : strings) {
-                        if (projectInfoMap.containsKey(projectName)) {
-                            final ProjectInfo projectInfo = new ProjectInfo(allProjectsIgnorePom.get(projectName));
-                            if (projectInfo.getSize().compareTo(projectInfoMap.get(projectName).getSize())==0) {
-                                allProjectsIgnorePom.remove(projectName);
-                            }
-                        }
-                    }
-                }
-                final ArtifactRepository localRepository = getProject().getProjectBuildingRequest().getLocalRepository();
-                final String basedir = localRepository.getBasedir();
-                final StringBuilder stringBuilder = new StringBuilder();
-                for (MavenProject value : allProjectsIgnorePom.values()) {
-                    stringBuilder.append(":"+value.getName()+",");
-                }
-
-                String substring = "";
-                // 安装 模块
-                if (allProjectsIgnorePom.values().size()>0) {
-                    substring = stringBuilder.substring(0, stringBuilder.length() - 1);
-                    final String cmd = "mvn install -f " + MavenUtil.getGroupIdRootProject(getProject()).getFile().getPath() + " -pl " + substring + " -Dmaven.test.skip=true";
-                    getLog().info("------------------------------------<SHELL>------------------------------------");
-                    getLog().info(cmd);
-                    getLog().info("------------------------------------<SHELL>------------------------------------");
-                    final String s = ShellUtil.execToString(cmd);
-                    getLog().info(s);
-                }
-                // 增量模块复制到统一目录下
-                for (MavenProject value : allProjectsIgnorePom.values()) {
-                    final Artifact artifact = value.getArtifact();
-                    artifact.setFile(new File(basedir,localRepository.pathOf(artifact)));
-                    copyArtifact(artifact, stripVersion, this.prependGroupId, this.useBaseVersion,
-                            this.stripClassifier);
-                }
+            final File lib = new File(incOutputDirectory, "lib");
+            if (!lib.exists()) {
+                lib.mkdirs();
             }
-            // 持久化 新增记录
-            persistenceIncInfo();
-            // 压缩打包
-            GZipUtil.compression(incOutputDirectory.getPath(),outputDirectory.getPath(),"february-biz-inc");
-        }catch (Exception e){
-            getLog().error(e);
+            // 增量jar复制到统一目录下
+            for (Artifact value : jars.values()) {
+                copyArtifact( value, stripVersion, this.prependGroupId, this.useBaseVersion,
+                        this.stripClassifier );
+            }
         }
 
+        // 过滤增量模块
+        final Map<String, ProjectInfo> projectInfoMap = projectInfoDBService.read();
+        final Map<String, MavenProject> allProjectsIgnorePom = mavenProjectService.getAllProjectsIgnorePom(getProject(), session);
+        if (allProjectsIgnorePom != null && allProjectsIgnorePom.size()>0) {
+            if(projectInfoMap!=null&& projectInfoMap.size()>0) {
+                final HashSet<String> strings = (HashSet<String>) Sets.newHashSet(allProjectsIgnorePom.keySet()).clone();
+                for (String projectName : strings) {
+                    if (projectInfoMap.containsKey(projectName)) {
+                        final ProjectInfo projectInfo = new ProjectInfo(allProjectsIgnorePom.get(projectName));
+                        if (projectInfo.getSize().compareTo(projectInfoMap.get(projectName).getSize())==0) {
+                            allProjectsIgnorePom.remove(projectName);
+                        }
+                    }
+                }
+            }
+            final ArtifactRepository localRepository = getProject().getProjectBuildingRequest().getLocalRepository();
+            final String basedir = localRepository.getBasedir();
+            final StringBuilder stringBuilder = new StringBuilder();
+            for (MavenProject value : allProjectsIgnorePom.values()) {
+                stringBuilder.append(":"+value.getName()+",");
+            }
+
+            String substring = "";
+            // 安装 模块
+            if (allProjectsIgnorePom.values().size()>0) {
+                substring = stringBuilder.substring(0, stringBuilder.length() - 1);
+                final String cmd = "mvn install -f " + MavenUtil.getGroupIdRootProject(getProject()).getFile().getPath() + " -pl " + substring + " -Dmaven.test.skip=true";
+                getLog().info("------------------------------------<SHELL>------------------------------------");
+                getLog().info(cmd);
+                getLog().info("------------------------------------<SHELL>------------------------------------");
+                ShellUtil.execToString(cmd);
+            }
+            // 增量模块复制到统一目录下
+            for (MavenProject value : allProjectsIgnorePom.values()) {
+                final Artifact artifact = value.getArtifact();
+                artifact.setFile(new File(basedir,localRepository.pathOf(artifact)));
+                copyArtifact(artifact, stripVersion, this.prependGroupId, this.useBaseVersion,
+                        this.stripClassifier);
+            }
+        }
+        // 持久化 新增记录
+        persistenceIncInfo();
+        // 压缩打包
+        GZipUtil.compression(incOutputDirectory.getPath(),outputDirectory.getPath(),"february-biz-inc");
     }
 
     private boolean containMustDownloadJars(String jarKey){
-        for (String s : mustDownloadJars) {
-            if (jarKey.contains(s)) {
-                return true;
+        if (mustDownloadJars!=null&& mustDownloadJars.size()>0) {
+            for (String s : mustDownloadJars) {
+                if (jarKey.contains(s)) {
+                    return true;
+                }
             }
         }
         return false;

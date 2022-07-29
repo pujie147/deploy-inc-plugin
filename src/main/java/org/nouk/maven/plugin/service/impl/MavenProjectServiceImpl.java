@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.internal.util.Sets;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.*;
 import org.codehaus.plexus.component.repository.exception.ComponentLookupException;
@@ -31,7 +32,7 @@ public class MavenProjectServiceImpl implements MavenProjectService {
     private List<String> ignoredPackagings = Arrays.asList( "pom", "ear" );
 
     @Override
-    public Map<String,MavenProject> getAllProjects(MavenProject project, MavenSession session) throws ComponentLookupException, ProjectBuildingException {
+    public Map<String,MavenProject> getAllProjects(MavenProject project, MavenSession session) throws MojoExecutionException {
         if (allProjects.size()==0) {
             getProject(MavenUtil.getGroupIdRootProject(project),session);
         }
@@ -39,7 +40,7 @@ public class MavenProjectServiceImpl implements MavenProjectService {
     }
 
     @Override
-    public Map<String, Artifact> getAllJars(MavenProject project, MavenSession session){
+    public Map<String, Artifact> getAllJars(MavenProject project, MavenSession session) throws MojoExecutionException {
         Set<String> allModelName = getAllProjectsSet(project, session);
         Map<String,Artifact> jars = Maps.newHashMap();
         for (Artifact artifact : project.getArtifacts()) {
@@ -52,47 +53,35 @@ public class MavenProjectServiceImpl implements MavenProjectService {
     }
 
     @Override
-    public Set<String> getAllProjectsSet(MavenProject project, MavenSession session) {
+    public Set<String> getAllProjectsSet(MavenProject project, MavenSession session) throws MojoExecutionException {
         final HashSet<String> objects = Sets.newHashSet();
-        try {
-            final Map<String, MavenProject> allProjects = getAllProjects(project, session);
-            for (MavenProject value : allProjects.values()) {
-                final ProjectInfo projectInfo = new ProjectInfo(value);
-                objects.add(projectInfo.getName());
-            }
-        } catch (ComponentLookupException e) {
-            e.printStackTrace();
-        } catch (ProjectBuildingException e) {
-            e.printStackTrace();
+        final Map<String, MavenProject> allProjects = getAllProjects(project, session);
+        for (MavenProject value : allProjects.values()) {
+            final ProjectInfo projectInfo = new ProjectInfo(value);
+            objects.add(projectInfo.getName());
         }
         return objects;
     }
 
     @Override
-    public Set<String> getAllProjectsIgnorePomSet(MavenProject project, MavenSession session) {
+    public Set<String> getAllProjectsIgnorePomSet(MavenProject project, MavenSession session) throws MojoExecutionException {
         final HashSet<String> objects = Sets.newHashSet();
-        try {
-            final Map<String, MavenProject> allProjects = getAllProjectsIgnorePom(project, session);
-            for (MavenProject value : allProjects.values()) {
-                objects.add(value.getGroupId()+":"+value.getArtifactId());
-            }
-        } catch (ComponentLookupException e) {
-            e.printStackTrace();
-        } catch (ProjectBuildingException e) {
-            e.printStackTrace();
+        final Map<String, MavenProject> allProjects = getAllProjectsIgnorePom(project, session);
+        for (MavenProject value : allProjects.values()) {
+            objects.add(value.getGroupId()+":"+value.getArtifactId());
         }
         return objects;
     }
 
     @Override
-    public Map<String,MavenProject> getAllProjectsIgnorePom(MavenProject project, MavenSession session) throws ComponentLookupException, ProjectBuildingException {
+    public Map<String,MavenProject> getAllProjectsIgnorePom(MavenProject project, MavenSession session) throws MojoExecutionException {
         if (allProjectsIgnorePom.size()==0) {
             getProject(MavenUtil.getGroupIdRootProject(project),session);
         }
         return allProjectsIgnorePom;
     }
 
-    private void getProject(MavenProject project, MavenSession session) throws ProjectBuildingException {
+    private void getProject(MavenProject project, MavenSession session) throws MojoExecutionException {
         ProjectBuildingRequest configuration = new DefaultProjectBuildingRequest();
         configuration.setRepositorySession(session.getRepositorySession());
         for(String module : project.getModules()){
@@ -100,7 +89,13 @@ public class MavenProjectServiceImpl implements MavenProjectService {
             if(modulePom.isDirectory()) {
                 modulePom = new File(modulePom, "pom.xml");
             }
-            final MavenProject mavenProject = projectBuilder.build(modulePom, configuration).getProject();
+            MavenProject mavenProject = null;
+            try {
+                mavenProject = projectBuilder.build(modulePom, configuration).getProject();
+            } catch (ProjectBuildingException e) {
+                e.printStackTrace();
+                throw new MojoExecutionException("");
+            }
             final ProjectInfo projectInfo = new ProjectInfo(mavenProject);
             if (!ignoredPackagings.contains(mavenProject.getPackaging())) {
                 allProjectsIgnorePom.put(projectInfo.getName(),mavenProject);

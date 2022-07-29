@@ -207,7 +207,7 @@ public class BuildIncMojo extends AbstractDependencyMojo {
                 if (!conf.exists()) {
                     conf.mkdirs();
                 }
-                FileUtils.copyDirectory(resourcesFile,conf);
+                FileUtils.copyDirectoryStructure(resourcesFile,conf);
             } catch (IOException e) {
                 getLog().error("resources file copy fail!");
                 getLog().error(e.getMessage());

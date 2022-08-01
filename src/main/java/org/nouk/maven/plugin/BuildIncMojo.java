@@ -123,13 +123,6 @@ public class BuildIncMojo extends AbstractDependencyMojo {
 
     @Override
     protected void doExecute() throws MojoExecutionException, MojoFailureException {
-        if (incOutputDirectory.exists()) {
-            try {
-                FileUtils.cleanDirectory(incOutputDirectory);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
         ProjectInfoDBServiceImpl projectInfoDBService = new ProjectInfoDBServiceImpl(incProjectOutputCache);
         JarInfoDBServiceImpl jarInfoDBService = new JarInfoDBServiceImpl(incJarOutputCache);
 

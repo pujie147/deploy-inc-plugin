@@ -139,15 +139,20 @@ public class BuildIncMojo extends AbstractDependencyMojo {
         final Map<String, Artifact> jars = mavenProjectService.getAllJars(getProject(), session);
         if (jars != null && jars.size()>0) {
             if(jarInfos!=null && jars.size()>0) {
+                getLog().info(String.format("----------------- build inc jars difference comparison begin -----------------"));
                 final HashSet<String> strings = (HashSet<String>) Sets.newHashSet(jars.keySet()).clone();
                 for (String jarKey : strings) {
                     if (containMustDownloadJars(jarKey)) {
+                        getLog().info(String.format("jarName:%s action:ignore version:%s",jarKey,jars.get(jarKey).getVersion()));
                         continue;
                     }
                     if (jarInfos.containsKey(jarKey)) {
                         jars.remove(jarKey);
+                    }else{
+                        getLog().info(String.format("jarName:%s action:update version:%s",jarKey,jars.get(jarKey).getVersion()));
                     }
                 }
+                getLog().info(String.format("----------------- build inc jars difference comparison end -----------------"));
             }
             final File lib = new File(incOutputDirectory, "lib");
             if (!lib.exists()) {

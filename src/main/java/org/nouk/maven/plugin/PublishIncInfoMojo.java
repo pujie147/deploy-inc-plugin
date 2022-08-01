@@ -16,27 +16,19 @@ package org.nouk.maven.plugin;
  * limitations under the License.
  */
 
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.nouk.maven.plugin.service.impl.JarInfoDBServiceImpl;
 import org.nouk.maven.plugin.service.impl.ProjectInfoDBServiceImpl;
 
-import java.io.File;
 import java.io.IOException;
 
 @Mojo(name = "publish-inc")
-public class PublishIncInfoMojo extends AbstractMojo {
-
-    @Parameter( property = "incOutputCache", defaultValue = "${project.build.directory}/inc-cache/jar.classInfo" )
-    protected File incJarOutputCache;
-    @Parameter( property = "incOutputCache", defaultValue = "${project.build.directory}/inc-cache/project.classInfo" )
-    protected File incProjectOutputCache;
+public class PublishIncInfoMojo extends AbstractDependencyMojo {
 
     @Override
-    public void execute() {
+    protected void doExecute() throws MojoExecutionException, MojoFailureException {
         ProjectInfoDBServiceImpl projectInfoDBService = new ProjectInfoDBServiceImpl(incProjectOutputCache);
         JarInfoDBServiceImpl jarInfoDBService = new JarInfoDBServiceImpl(incJarOutputCache);
         try {

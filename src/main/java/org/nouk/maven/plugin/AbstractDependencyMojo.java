@@ -145,9 +145,9 @@ public abstract class AbstractDependencyMojo
     @Parameter( property = "deployInc.skip", defaultValue = "false" )
     private boolean skip;
 
-    @Parameter( property = "incOutputCache", defaultValue = "${project.build.directory}/inc-cache/jar.classInfo" )
+    @Parameter( property = "incOutputCache", defaultValue = "${project.basedir}/.inc-cache/jar.classInfo" )
     protected File incJarOutputCache;
-    @Parameter( property = "incOutputCache", defaultValue = "${project.build.directory}/inc-cache/project.classInfo" )
+    @Parameter( property = "incOutputCache", defaultValue = "${project.basedir}/.inc-cache/project.classInfo" )
     protected File incProjectOutputCache;
 
     @Inject

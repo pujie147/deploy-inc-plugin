@@ -135,6 +135,7 @@ public class BuildIncMojo extends AbstractDependencyMojo {
 
         // 过滤增量 jars
         final Map<String, JarInfo> jarInfos = jarInfoDBService.read();
+
         final Map<String, Artifact> jars = mavenProjectService.getAllJars(getProject(), session);
         if (jars != null && jars.size()>0) {
             if(jarInfos!=null && jars.size()>0) {
@@ -158,22 +159,36 @@ public class BuildIncMojo extends AbstractDependencyMojo {
                         this.stripClassifier );
             }
         }
-
+        getLog().info("-----------------------------jar info update cache-----------------------------");
+        for (String key : jars.keySet()) {
+            jarInfos.put(key,new JarInfo(jars.get(key)));
+        }
+        for (JarInfo jInfo : jarInfos.values()) {
+            getLog().info("name:"+jInfo.getName()+" version:"+jInfo.getVersion());
+        }
+        jarInfoDBService.wireTmp(jarInfos);
         // 过滤增量模块
         final Map<String, ProjectInfo> projectInfoMap = projectInfoDBService.read();
         final Map<String, MavenProject> allProjectsIgnorePom = mavenProjectService.getAllProjectsIgnorePom(getProject(), session);
+
         if (allProjectsIgnorePom != null && allProjectsIgnorePom.size()>0) {
+            getLog().info(String.format("----------------- build inc projects difference comparison begin -----------------"));
             if(projectInfoMap!=null&& projectInfoMap.size()>0) {
                 final HashSet<String> strings = (HashSet<String>) Sets.newHashSet(allProjectsIgnorePom.keySet()).clone();
                 for (String projectName : strings) {
+                    final ProjectInfo projectInfo = new ProjectInfo(allProjectsIgnorePom.get(projectName));
                     if (projectInfoMap.containsKey(projectName)) {
-                        final ProjectInfo projectInfo = new ProjectInfo(allProjectsIgnorePom.get(projectName));
                         if (projectInfo.getSize().compareTo(projectInfoMap.get(projectName).getSize())==0) {
                             allProjectsIgnorePom.remove(projectName);
+                        }else{
+                            getLog().info(String.format("projectName:%s status:exist action:update oldSize:%d newSize:%d",projectName,projectInfoMap.get(projectName).getSize(),projectInfo.getSize()));
                         }
+                    }else{
+                        getLog().info(String.format("projectName:%s status:notExist action:new newSize:%d",projectName,projectInfo.getSize()));
                     }
                 }
             }
+            getLog().info(String.format("----------------- build inc projects difference comparison end -----------------"));
             final ArtifactRepository localRepository = getProject().getProjectBuildingRequest().getLocalRepository();
             final String basedir = localRepository.getBasedir();
             final StringBuilder stringBuilder = new StringBuilder();
@@ -198,6 +213,14 @@ public class BuildIncMojo extends AbstractDependencyMojo {
                 copyArtifact(artifact, stripVersion, this.prependGroupId, this.useBaseVersion,
                         this.stripClassifier);
             }
+            getLog().info("-----------------------------project info update cache-----------------------------");
+            for (String key : allProjectsIgnorePom.keySet()) {
+                projectInfoMap.put(key,new ProjectInfo(allProjectsIgnorePom.get(key)));
+            }
+            for (ProjectInfo projectInfo : projectInfoMap.values()) {
+                getLog().info("name:"+projectInfo.getName()+" version:"+projectInfo.getVersion()+" size:"+projectInfo.getSize());
+            }
+            projectInfoDBService.wireTmp(projectInfoMap);
         }
         final File resourcesFile = new File(getProject().getFile().getParentFile(), "src" + File.separator + "main" + File.separator + "resources");
         if (resourcesFile.exists()) {

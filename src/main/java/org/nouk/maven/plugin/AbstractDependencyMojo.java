@@ -177,23 +177,19 @@ public abstract class AbstractDependencyMojo
                 jars.put(jarInfo.getName(),jarInfo);
             }
         }
-        try {
-            getLog().info("-----------------------------project info update cache-----------------------------");
-            if (projects!=null && projects.size()>0) {
-                projectInfoDBService.wireTmp(projects);
-                for (ProjectInfo projectInfo : projects.values()) {
-                    getLog().info("name:"+projectInfo.getName()+" version:"+projectInfo.getVersion()+" size:"+projectInfo.getSize());
-                }
+        getLog().info("-----------------------------project info update cache-----------------------------");
+        if (projects!=null && projects.size()>0) {
+            projectInfoDBService.wireTmp(projects);
+            for (ProjectInfo projectInfo : projects.values()) {
+                getLog().info("name:"+projectInfo.getName()+" version:"+projectInfo.getVersion()+" size:"+projectInfo.getSize());
             }
-            getLog().info("-----------------------------jar info update cache-----------------------------");
-            if (jars!=null && jars.size()>0) {
-                jarInfoDBService.wireTmp(jars);
-                for (JarInfo jarInfo : jars.values()) {
-                    getLog().info("name:"+jarInfo.getName()+" version:"+jarInfo.getVersion());
-                }
+        }
+        getLog().info("-----------------------------jar info update cache-----------------------------");
+        if (jars!=null && jars.size()>0) {
+            jarInfoDBService.wireTmp(jars);
+            for (JarInfo jarInfo : jars.values()) {
+                getLog().info("name:"+jarInfo.getName()+" version:"+jarInfo.getVersion());
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
     /*

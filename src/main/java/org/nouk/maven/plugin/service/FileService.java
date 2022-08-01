@@ -3,6 +3,7 @@ package org.nouk.maven.plugin.service;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.maven.plugin.MojoExecutionException;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -31,9 +32,14 @@ public abstract class FileService<T> {
         }
     }
 
-    public void wireTmp(T list) throws IOException {
-        if (usingTmp.canWrite()) {
-            wire(list);
+    public void wireTmp(T list) throws MojoExecutionException {
+        try {
+            if (usingTmp.canWrite()) {
+                wire(list);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            throw new MojoExecutionException("");
         }
     }
 

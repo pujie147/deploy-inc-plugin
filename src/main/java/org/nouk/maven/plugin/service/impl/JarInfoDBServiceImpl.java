@@ -1,5 +1,6 @@
 package org.nouk.maven.plugin.service.impl;
 
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -21,5 +22,12 @@ public class JarInfoDBServiceImpl extends FileService<Map<String,JarInfo>> {
         }.getType());
     }
 
-
+    @Override
+    public Map<String, JarInfo> read() {
+        Map<String, JarInfo> read = super.read();
+        if (read==null) {
+            read = Maps.newHashMap();
+        }
+        return read;
+    }
 }

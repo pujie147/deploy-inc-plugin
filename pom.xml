@@ -4,7 +4,7 @@
   <groupId>org.nouk.maven.plugin</groupId>
   <artifactId>deploy-inc-plugin</artifactId>
   <packaging>maven-plugin</packaging>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.0.2</version>
   <name>deploy-inc-plugin Maven Mojo</name>
   <url>http://maven.apache.org</url>
 
@@ -179,7 +179,7 @@
       <id>maven-test</id>
       <name>Team Nexus Repository</name>
       <!--生产-->
-      <!--      <url>http://nexus.test.whispark.com/repository/maven-releases/</url>-->
+<!--            <url>http://nexus.test.whispark.com/repository/maven-releases/</url>-->
       <url>http://nexus.test.whispark.com/repository/maven-test/</url>
     </repository>
     <!--如有Nexus私服, 取消注释并指向正确的服务器地址. -->
@@ -190,6 +190,8 @@
         <repository>
           <id>public</id>
           <name>Team Nexus Repository</name>
+          <!--生产-->
+<!--          <url>http://nexus.test.whispark.com/repository/maven-releases/</url>-->
           <url>http://nexus.test.whispark.com/repository/maven-test/</url>
           <uniqueVersion>true</uniqueVersion>
         </repository>
@@ -197,6 +199,7 @@
       <id>maven-test</id>
       <name>Team Nexus Repository</name>
       <!--生产-->
+<!--      <url>http://nexus.test.whispark.com/repository/maven-releases/</url>-->
       <url>http://nexus.test.whispark.com/repository/maven-test/</url>
     </snapshotRepository>
   </distributionManagement>

@@ -28,5 +28,4 @@ deploy-inc-plugin 是增量打包的maven plugin，在maven module 非常多的�
 > 第一次要全量包步骤 1 -> 3   
 > 之后打增量包步骤 2 -> 3
 
-## 注意事项
-- 不要使用clean，因为增量信息需要持久。使用clean会把增量信息清除，导致打包是全量包
+

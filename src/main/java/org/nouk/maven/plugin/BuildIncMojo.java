@@ -233,8 +233,12 @@ public class BuildIncMojo extends AbstractDependencyMojo {
                 getLog().error(e.getMessage());
             }
         }
+        getLog().info("build package compression start >>>>>>");
+        final String packageFileName = "february-biz-inc";
+        getLog().info("build package-name:"+packageFileName+" ");
         // 压缩打包
-        GZipUtil.compression(incOutputDirectory.getPath(),outputDirectory.getPath(),"february-biz-inc");
+        GZipUtil.compression(incOutputDirectory.getPath(),outputDirectory.getPath(), packageFileName);
+        getLog().info("build package compression end <<<<<<<");
     }
 
     private boolean containMustDownloadJars(String jarKey){

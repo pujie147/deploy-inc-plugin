@@ -19,6 +19,10 @@ package org.nouk.maven.plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.*;
+import org.codehaus.plexus.util.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
 
 
 @Mojo( name = "clearCache", requiresDependencyResolution = ResolutionScope.COMPILE, defaultPhase = LifecyclePhase.PROCESS_SOURCES, threadSafe = true)
@@ -27,11 +31,16 @@ public class ClearCacheMojo extends AbstractDependencyMojo {
 
     @Override
     protected void doExecute() throws MojoExecutionException, MojoFailureException {
-        if (this.incJarOutputCache.exists()) {
-            this.incJarOutputCache.delete();
-        }
-        if(this.incProjectOutputCache.exists()){
-            this.incProjectOutputCache.delete();
+        final File parentFile = this.incJarOutputCache.getParentFile();
+        getLog().info("cache file :"+parentFile.getPath()+" exists:"+parentFile.exists());
+        if (parentFile.exists()) {
+            try {
+                FileUtils.deleteDirectory(parentFile);
+            } catch (IOException e) {
+                getLog().info("fileExists:"+parentFile.getPath()+" Delete fail !");
+                return;
+            }
+            getLog().info("fileExists:"+parentFile.getPath()+" Deleted");
         }
     }
 
